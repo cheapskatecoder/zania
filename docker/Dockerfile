@@ -1,22 +1,24 @@
 # Base Python image
 FROM python:3.10.16-slim
 
-# Set work directory
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy requirements first and install
+# Copy requirements file to the container
 COPY requirements.txt /app/
+
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy entire project (including manage.py, your Django app, and docker/ scripts)
+# Copy the entire project into the container
 COPY . /app/
 
-# Expose the Django port
+# Expose the port Django will run on
 EXPOSE 8000
 
-# Make sure our scripts are executable
-RUN chmod +x docker/create_products.sh
-RUN chmod +x docker/start_server_setup_dummy_data.sh
-
-# When the container starts, run our custom script
-CMD ["sh", "docker/start_server_setup_dummy_data.sh"]
+# Default command to run the development server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

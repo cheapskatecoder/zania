@@ -1,39 +1,34 @@
 # E-commerce API (Django + DRF)
 
-Welcome to the **E-commerce API**, built with **Django** and the **Django REST Framework** (DRF). This project provides basic functionality for managing products and orders, making it a foundation for a more comprehensive e-commerce platform.
+Welcome to the **E-commerce API**, built with **Django** and the **Django REST Framework** (DRF). This project provides functionality for managing products and orders, making it a foundational backend for an e-commerce platform.
 
 ## Table of Contents
 1. [Project Structure](#project-structure)
 2. [Installation & Setup](#installation--setup)
 3. [Database Migrations](#database-migrations)
 4. [Running the Server](#running-the-server)
-5. [API Endpoints](#api-endpoints)
-6. [Postman Collection](#postman-collection)
-7. [Running Tests](#running-tests)
-8. [Possible Improvements](#possible-improvements)
+5. [Deployment](#deployment)
+6. [API Endpoints](#api-endpoints)
+7. [Postman Collection](#postman-collection)
+8. [Running Tests](#running-tests)
+9. [Possible Improvements](#possible-improvements)
 
 ---
 
 ## Project Structure
 
-The project structure is organized as follows:
-
+Below is the relevant project structure:
 
 ```bash
 .
 ├── README.md
 ├── api
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
-│   ├── migrations
-│   │   ├── 0001_initial.py
-│   │   └── __init__.py
 │   ├── models.py
 │   ├── serializers.py
-│   ├── tests.py
+│   ├── views.py
 │   ├── urls.py
-│   └── views.py
+│   ├── tests.py
+│   └── migrations/
 ├── docker
 │   ├── Dockerfile
 │   ├── create_products.sh
@@ -41,25 +36,13 @@ The project structure is organized as follows:
 ├── manage.py
 ├── requirements.txt
 └── zania
-    ├── __init__.py
-    ├── asgi.py
-    ├── settings
+    ├── settings/
     │   ├── base.py
     │   ├── dev.py
     │   └── prod.py
     ├── urls.py
     └── wsgi.py
-
 ```
-
-Key components:
-- **`api/models.py`**: Defines `Product`, `Order`, and `OrderItem` models.
-- **`api/serializers.py`**: DRF serializers for data validation and transformation.
-- **`api/views.py`**: Class-based views for listing/creating `Products` and creating `Orders`.
-- **`api/urls.py`**: URL configurations specific to the API endpoints.
-- **`api/tests.py`**: Django test cases for the API.
-- **`docker/`**: Contains scripts for Docker automation and populating data.
-- **`requirements.txt`**: Lists project dependencies.
 
 ---
 
@@ -87,13 +70,14 @@ Key components:
 
 ## Database Migrations
 
-Run the following to create the database schema:
+Run the following to set up the database schema:
 
 ```bash
 python manage.py migrate
 ```
 
-This will set up tables for `Product`, `Order`, and `OrderItem`.
+> **Note**:  
+> The `dev.py` settings file is configured to use **SQLite3** by default, ensuring the development environment works out of the box without requiring PostgreSQL. For production, refer to `prod.py`, which is configured to use PostgreSQL.
 
 ---
 
@@ -109,39 +93,44 @@ Access the API at [http://127.0.0.1:8000](http://127.0.0.1:8000).
 
 ---
 
-## API Endpoints
+## Deployment
 
-### 1. **GET `/api/products`**
-**Description**: Retrieve a list of all products.  
-**Example Request**:
+To deploy the project in a production environment, follow these steps:
+
+### 1. Build the Docker Image
+
 ```bash
-curl -X GET http://127.0.0.1:8000/api/products
+docker build -t ecommerce-api .
 ```
-**Response**:
-```json
-[
-  {
-    "id": 1,
-    "name": "Laptop",
-    "description": "A powerful laptop",
-    "price": 999.99,
-    "stock": 10
-  },
-  {
-    "id": 2,
-    "name": "Headphones",
-    "description": "Wireless and noise-cancelling",
-    "price": 199.99,
-    "stock": 20
-  }
-]
+
+### 2. Run the Container
+
+For a **production** setup, use the following command to run the container. It uses the `prod.py` settings:
+
+```bash
+docker run -p 8000:8000 -e DJANGO_SETTINGS_MODULE=zania.settings.prod ecommerce-api
 ```
+
+### 3. Additional Steps for Production
+- Use a proper WSGI server like **Gunicorn**:
+  ```bash
+  gunicorn zania.wsgi:application --bind 0.0.0.0:8000
+  ```
+- Deploy behind a reverse proxy like **Nginx** for better performance and security.
+- Set up **PostgreSQL** as the database by configuring the `prod.py` settings file.
 
 ---
 
+## API Endpoints
+
+### 1. **GET `/api/products`**
+Retrieve a list of all products.
+```bash
+curl -X GET http://127.0.0.1:8000/api/products
+```
+
 ### 2. **POST `/api/products/create`**
-**Description**: Add a new product to the database.  
-**Example Request**:
+Add a new product.
 ```bash
 curl -X POST http://127.0.0.1:8000/api/products/create \
      -H "Content-Type: application/json" \
@@ -152,22 +141,9 @@ curl -X POST http://127.0.0.1:8000/api/products/create \
            "stock": 10
          }'
 ```
-**Response**:
-```json
-{
-  "id": 3,
-  "name": "Laptop",
-  "description": "Powerful laptop with 16GB RAM",
-  "price": 999.99,
-  "stock": 10
-}
-```
-
----
 
 ### 3. **POST `/api/orders`**
-**Description**: Place an order for products.  
-**Example Request**:
+Place an order.
 ```bash
 curl -X POST http://127.0.0.1:8000/api/orders \
      -H "Content-Type: application/json" \
@@ -177,14 +153,6 @@ curl -X POST http://127.0.0.1:8000/api/orders \
              { "product": 2, "quantity": 1 }
            ]
          }'
-```
-**Response**:
-```json
-{
-  "id": 1,
-  "total_price": 1399.97,
-  "status": "pending"
-}
 ```
 
 ---
@@ -204,58 +172,46 @@ To simplify testing, a **Postman collection** is included in the repository.
 
 ## Running Tests
 
-Run tests with Django’s built-in test framework:
+To run the tests:
 
 ```bash
 python manage.py test
 ```
 
-This runs all test cases defined in `api/tests.py`.
-
 ---
 
 ## Possible Improvements
 
-This is a basic implementation of an e-commerce API. Here’s a list of enhancements to consider:
+This project is a basic implementation. Here are some areas for improvement:
 
-### 1. **Authentication & Authorization**
+1. **Authentication & Authorization**:
    - Add user authentication (e.g., token-based or session-based).
    - Restrict product creation to admin users.
    - Allow customers to view only their own orders.
 
-### 2. **Pagination**
-   - Implement pagination for the `/products` endpoint to handle large datasets.
+2. **Improved Error Handling**:
+   - Return more descriptive error messages.
+   - Validate order payloads more comprehensively.
 
-### 3. **Filtering & Sorting**
-   - Allow filtering products by price, name, or stock levels.
-   - Enable sorting options for `/products` (e.g., by price or name).
-
-### 4. **Enhanced Order Management**
-   - Add order statuses beyond "pending" and "completed" (e.g., "shipped", "cancelled").
+3. **Enhanced Order Management**:
+   - Add additional order statuses (e.g., "shipped", "cancelled").
    - Include customer information in orders.
 
-### 5. **Improved Stock Management**
-   - Add stock alerts when inventory levels are low.
-   - Implement a "restock" endpoint for admins.
+4. **Database Optimization**:
+   - Use PostgreSQL in production for better performance.
+   - Add indexes on frequently queried fields (e.g., `price` in `Product`).
 
-### 6. **Error Handling**
-   - Provide more detailed error messages.
-   - Validate order items (e.g., prevent duplicates).
+5. **Pagination, Filtering, and Sorting**:
+   - Implement pagination for `/products`.
+   - Add filtering and sorting options (e.g., by price, stock).
 
-### 7. **Unit Tests**
-   - Add more comprehensive test cases for edge cases and failure scenarios.
+6. **Deployment**:
+   - Set up a CI/CD pipeline for automated builds and deployment.
+   - Use environment variables for sensitive settings (e.g., database credentials).
 
-### 8. **Deployment Optimization**
-   - Use Gunicorn or uWSGI with Nginx for production.
-   - Add Docker support (build and run the app as a container).
-
-### 9. **Database Optimization**
-   - Use indexing for frequently queried fields (e.g., `price` or `name` in `Product`).
-   - Add caching for `/products` to improve response time.
+7. **Tests**:
+   - Expand test coverage to include edge cases and negative scenarios.
 
 ---
 
-## Conclusion
-
-This project demonstrates a simple e-commerce backend built with Django and DRF. While functional, there’s ample room for improvement to make it production-ready. Feel free to extend it and adapt it to your specific needs.  
-```
+This project serves as a foundation for building a more comprehensive e-commerce system. Contributions and feedback are welcome!
