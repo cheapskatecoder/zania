@@ -23,6 +23,17 @@ A production-grade RESTful API for a simple e-commerce platform built with FastA
 - Docker
 - Python 3.9+ (for local development)
 
+
+## Database Configuration
+
+The application uses PostgreSQL as its database. The following environment variables can be configured:
+
+- `POSTGRES_USER`: Database user (default: postgres)
+- `POSTGRES_PASSWORD`: Database password (default: postgres)
+- `POSTGRES_DB`: Database name (default: ecommerce)
+- `POSTGRES_HOST`: Database host (default: db)
+- `POSTGRES_PORT`: Database port (default: 5432)
+
 ### Running with Docker
 
 1. Build the Docker image:
@@ -57,12 +68,29 @@ uvicorn app.main:app --reload
 
 4. Access the API at `http://localhost:8000`
 
+
+### Local Development with Docker
+1. Build the container using docker-compose. The server is set to autoreload everytime you change any of the files.
+
+```
+# to build the container from scratch
+docker-compose up --build
+
+# if the container has already been built
+docker-compose up
+```
+
 ## Testing
 
 Run the tests using pytest:
 
 ```
+# if you're using the project without docker and local dependencies such as database connections already setup.
 pytest
+
+
+# if you're using docker
+docker run -it <container-name> pytest
 ```
 
 ## API Documentation
@@ -116,52 +144,3 @@ curl -X 'POST' \
   ]
 }'
 ```
-
-## Database Configuration
-
-The application uses PostgreSQL as its database. The following environment variables can be configured:
-
-- `POSTGRES_USER`: Database user (default: postgres)
-- `POSTGRES_PASSWORD`: Database password (default: postgres)
-- `POSTGRES_DB`: Database name (default: ecommerce)
-- `POSTGRES_HOST`: Database host (default: db)
-- `POSTGRES_PORT`: Database port (default: 5432)
-
-## Running with Docker Compose
-
-1. Start the services:
-```bash
-docker-compose up --build
-```
-
-2. The API will be available at `http://localhost:8000`
-
-## Local Development
-
-1. Install PostgreSQL on your system
-2. Create a database named 'ecommerce'
-3. Set up environment variables or update database.py with your PostgreSQL credentials
-4. Create and activate virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-5. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-6. Run the application:
-```bash
-uvicorn app.main:app --reload
-```
-
-## Running Tests
-
-The tests use a separate PostgreSQL database. Make sure the test database exists before running tests:
-
-```bash
-docker-compose up test_db -d
-pytest
-``` 

@@ -9,7 +9,8 @@ from sqlalchemy.exc import OperationalError
 POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
 POSTGRES_DB = os.getenv("POSTGRES_DB", "ecommerce")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "db")
+# if you're running docker container and want to connect to your local database
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "host.docker.internal")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 
 SQLALCHEMY_DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
