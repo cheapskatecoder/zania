@@ -1,8 +1,10 @@
+import os
+from decimal import Decimal, ROUND_UP
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import os
 
 from app.main import app
 from app.database import get_db
@@ -64,7 +66,7 @@ def test_create_product(client):
     product_data = {
         "name": "Test Product",
         "description": "This is a test product",
-        "price": 19.99,
+        "price": "19.99",
         "stock": 100
     }
     response = client.post("/products", json=product_data)
@@ -144,7 +146,7 @@ def test_create_order_success(client, test_db):
     assert response.status_code == 201
     
     data = response.json()
-    assert data["total_price"] == 5 * product_data["price"]
+    assert Decimal(data["total_price"]) == (Decimal(product_data["price"]) * Decimal(5)).quantize(Decimal("0.01"), rounding=ROUND_UP)
     assert data["status"] == "pending"
     assert len(data["items"]) == 1
     

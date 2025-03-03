@@ -1,5 +1,7 @@
-from pydantic import BaseModel, validator
+from decimal import Decimal
 from typing import List
+from typing_extensions import Annotated
+from pydantic import BaseModel, Field, validator
 from enum import Enum
 
 class OrderStatus(str, Enum):
@@ -9,15 +11,18 @@ class OrderStatus(str, Enum):
 class ProductBase(BaseModel):
     name: str
     description: str
-    price: float
+    price: Annotated[Decimal, Field(strict=True, gt=0)]
     stock: int
-    
-    @validator('price')
-    def price_must_be_positive(cls, v):
-        if v <= 0:
-            raise ValueError('Price must be positive')
-        return v
-    
+
+    @validator('price', pre=True)
+    def quantize_price(cls, v):
+        try:
+            d = Decimal(v)
+        except Exception as e:
+            raise ValueError("Invalid decimal value") from e
+        # Enforce exactly 2 decimal places
+        return d.quantize(Decimal("0.01"))
+
     @validator('stock')
     def stock_must_be_non_negative(cls, v):
         if v < 0:
@@ -55,7 +60,7 @@ class OrderItem(BaseModel):
 
 class Order(BaseModel):
     id: int
-    total_price: float
+    total_price: Annotated[Decimal, Field(strict=True, gt=0)]
     status: OrderStatus
     items: List[OrderItem]
     
